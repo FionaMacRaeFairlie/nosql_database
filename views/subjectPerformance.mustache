@@ -1,0 +1,29 @@
+<html>
+
+<head>
+   <meta charset="utf-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1"> 
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+</head>
+
+<body>
+   <div class="card w-50">
+    
+        <div class="card-body">
+            <h3 class="card-title">Students who {{status}}ed {{title}}</h3>
+            {{#entries}}
+             <table class="table">
+               <tr><td class="col-1">{{student}}</td><td class="col-2">{{programme}}</td><td class="col-3">{{grade}}</td></tr>
+                </div>
+             {{/entries}} 
+             </table>
+
+    
+    </div>
+    </div> 
+    {{^entries}}
+        No entries yet.
+    {{/entries}}
+</body>
+
+</html>
