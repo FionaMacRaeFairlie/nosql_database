@@ -20,6 +20,8 @@ router.get("/passedwebdev", controller.pass_webdev);
 router.get("/failedaadp", controller.fail_aadp);
 router.get("/passedaadp", controller.pass_aadp);
 
+router.get("/api",controller.serveJson)
+
 router.use(function(req, res) {
     res.status(404);
     res.type('text/plain');

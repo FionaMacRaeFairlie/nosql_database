@@ -153,9 +153,6 @@ exports.pass_webdev = function (req, res) {
     });
 };
 
-
-
-
 exports.pass_aadp = function (req, res) {
   const subject = "Application Architectures";
   db.displayPass(subject)
@@ -195,6 +192,16 @@ exports.application_arch = function (req, res) {
         title: subject,
         entries: list,
       });
+    })
+    .catch((err) => {
+      console.log("promise rejected", err);
+    });
+};
+
+exports.serveJson = function (req, res) {
+  db.displayAll()
+    .then((list) => {
+      res.json(list)
     })
     .catch((err) => {
       console.log("promise rejected", err);
