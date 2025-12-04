@@ -1,209 +1,166 @@
-const studentDatabase = require("../models/studentModel");
-const db = new studentDatabase("database/student.db");
+// controllers/studentController.js (ES Modules)
 
-//  db.init();
+// import StudentDatabase from "../models/studentModel.js"; // Works if CJS exports a class via module.exports
+// If studentModel.js has named export: import { StudentDatabase } from '../models/studentModel.js';
 
+import StudentDatabase from "../models/studentModel.js";
+const db = new StudentDatabase("database/student.db");
+
+// db.init(); // Uncomment if you need to init the DB on controller load
+
+/**
+ * Restructures the list into flat entries for a given subject.
+ * Keeps the original behavior: if subject not found for a student,
+ * the object will have { student } only (no subject/grade).
+ */
 function restructureData(subject, list) {
-  const subjectList = list.map(function (item) {
-    const newList = {};
-    newList.student = item.student;
-    for (var i = 0; i < item.modules.length; i++) {
-      if (item.modules[i].name == subject) {
-        newList.subject = item.modules[i].name;
-        newList.grade = item.modules[i].grade;
-      }
+  return list.map((item) => {
+    const newEntry = { student: item.student };
+    const match = Array.isArray(item.modules)
+      ? item.modules.find((m) => m?.name === subject)
+      : undefined;
+
+    if (match) {
+      newEntry.subject = match.name;
+      newEntry.grade = match.grade;
     }
-    return newList;
+
+    return newEntry;
   });
-  return subjectList;
 }
 
-exports.landing_page = function (req, res) {
-  db.displayAll()
-    .then((list) => {
-      res.render("studentex", {
-        entries: list,
-      });
-    })
-    .catch((err) => {
-      console.log("promise rejected", err);
-    });
-};
+// ---------- Route handlers (Express-compatible) ----------
 
-exports.web_development = function (req, res) {
+export async function landing_page(req, res) {
+  try {
+    const list = await db.displayAll();
+    res.render("studentex", { entries: list });
+  } catch (err) {
+    console.error("promise rejected", err);
+    res.status(500).send("Internal Server Error");
+  }
+}
+
+export async function web_development(req, res) {
   const subject = "Web Development";
-  db.displayWebDev()
-    .then((list) => {
-      res.render("classList", {
-        title: subject,
-        entries: list,
-      });
-    })
-    .catch((err) => {
-      console.log("promise rejected", err);
-    });
-};
+  try {
+    const list = await db.displayWebDev();
+    res.render("classList", { title: subject, entries: list });
+  } catch (err) {
+    console.error("promise rejected", err);
+    res.status(500).send("Internal Server Error");
+  }
+}
 
-exports.low_performance = function (req, res) {
-  db.displayLowPerformance()
-    .then((list) => {
-      res.render("performance", {
-        title: "Students with poor performance",
-        entries: list,
-      });
-    })
-    .catch((err) => {
-      console.log("promise rejected", err);
+export async function low_performance(req, res) {
+  try {
+    const list = await db.displayLowPerformance();
+    res.render("performance", {
+      title: "Students with poor performance",
+      entries: list,
     });
-};
+  } catch (err) {
+    console.error("promise rejected", err);
+    res.status(500).send("Internal Server Error");
+  }
+}
 
-exports.fail_programming = function (req, res) {
-  const subject = "Programming";
-  db.displayFail(subject)
-    .then((list) => {
-    const subjectList=  restructureData(subject, list);
-      res.render("subjectPerformance", {
-        title: subject,
-        entries: subjectList,
-        status:"fail"
-      });
-    })
-    .catch((err) => {
-      console.log("promise rejected", err);
+// ------------- Helpers for repeated pass/fail subject views -------------
+
+async function renderSubjectStatus(req, res, subject, status) {
+  try {
+    const list =
+      status === "pass"
+        ? await db.displayPass(subject)
+        : await db.displayFail(subject);
+
+    const subjectList = restructureData(subject, list);
+
+    res.render("subjectPerformance", {
+      title: subject,
+      entries: subjectList,
+      status,
     });
-};
+  } catch (err) {
+    console.error("promise rejected", err);
+    res.status(500).send("Internal Server Error");
+  }
+}
 
-exports.fail_se = function (req, res) {
-  const subject = "Software Engineering";
-  db.displayFail(subject)
-    .then((list) => {
-    const subjectList=  restructureData(subject, list);
-      res.render("subjectPerformance", {
-        title: subject,
-        entries: subjectList,
-        status:"fail"
-      });
-    })
-    .catch((err) => {
-      console.log("promise rejected", err);
-    });
-};
+// ------------------- Fail routes -------------------
 
-exports.fail_webdev = function (req, res) {
-  const subject = "Web Development";
-  db.displayFail(subject)
-    .then((list) => {
-    const subjectList=  restructureData(subject, list);
-      res.render("subjectPerformance", {
-        title: subject,
-        entries: subjectList,
-        status:"fail"
-      });
-    })
-    .catch((err) => {
-      console.log("promise rejected", err);
-    });
-};
+export function fail_programming(req, res) {
+  return renderSubjectStatus(req, res, "Programming", "fail");
+}
 
-exports.pass_programming = function (req, res) {
-  const subject = "Programming";
-  db.displayPass(subject)
-    .then((list) => {
-      const subjectList=  restructureData(subject, list);
-      res.render("subjectPerformance", {
-        title: subject,
-        entries: subjectList,
-        status:"pass"
-      });
-    })
-    .catch((err) => {
-      console.log("promise rejected", err);
-    });
-};
+export function fail_se(req, res) {
+  return renderSubjectStatus(req, res, "Software Engineering", "fail");
+}
 
-exports.pass_se = function (req, res) {
-  const subject = "Software Engineering";
-  db.displayPass(subject)
-    .then((list) => {
-    const subjectList=  restructureData(subject, list);
-      res.render("subjectPerformance", {
-        title: subject,
-        entries: subjectList,
-        status:"pass"
-      });
-    })
-    .catch((err) => {
-      console.log("promise rejected", err);
-    });
-};
+export function fail_webdev(req, res) {
+  return renderSubjectStatus(req, res, "Web Development", "fail");
+}
 
-exports.pass_webdev = function (req, res) {
-  const subject = "Web Development";
-  db.displayPass(subject)
-    .then((list) => {
-    const subjectList=  restructureData(subject, list);
-      res.render("subjectPerformance", {
-        title: subject,
-        entries: subjectList,
-        status:"pass"
-      });
-    })
-    .catch((err) => {
-      console.log("promise rejected", err);
-    });
-};
+export function fail_aadp(req, res) {
+  return renderSubjectStatus(req, res, "Application Architectures", "fail");
+}
 
-exports.pass_aadp = function (req, res) {
+// ------------------- Pass routes -------------------
+
+export function pass_programming(req, res) {
+  return renderSubjectStatus(req, res, "Programming", "pass");
+}
+
+export function pass_se(req, res) {
+  return renderSubjectStatus(req, res, "Software Engineering", "pass");
+}
+
+export function pass_webdev(req, res) {
+  return renderSubjectStatus(req, res, "Web Development", "pass");
+}
+
+export function pass_aadp(req, res) {
+  return renderSubjectStatus(req, res, "Application Architectures", "pass");
+}
+
+// ------------------- Class list pages -------------------
+
+export async function application_arch(req, res) {
   const subject = "Application Architectures";
-  db.displayPass(subject)
-    .then((list) => {
-      const subjectList=  restructureData(subject, list);
-      res.render("subjectPerformance", {
-        title: subject,
-        entries: subjectList,
-        status:"pass"
-      });
-    })
-    .catch((err) => {
-      console.log("promise rejected", err);
-    });
-};
-exports.fail_aadp = function (req, res) {
-  const subject = "Application Architectures";
-  db.displayFail(subject)
-    .then((list) => {
-    const subjectList=  restructureData(subject, list);
-      res.render("subjectPerformance", {
-        title: subject,
-        entries: subjectList,
-        status:"fail"
-      });
-    })
-    .catch((err) => {
-      console.log("promise rejected", err);
-    });
-};
+  try {
+    const list = await db.displayAppArch();
+    res.render("classList", { title: subject, entries: list });
+  } catch (err) {
+    console.error("promise rejected", err);
+    res.status(500).send("Internal Server Error");
+  }
+}
 
-exports.application_arch = function (req, res) {
-  const subject = "Application Architectures";
-  db.displayAppArch()
-    .then((list) => {
-      res.render("classList", {
-        title: subject,
-        entries: list,
-      });
-    })
-    .catch((err) => {
-      console.log("promise rejected", err);
-    });
-};
+// ------------------- JSON endpoint -------------------
 
-exports.serveJson = function (req, res) {
-  db.displayAll()
-    .then((list) => {
-      res.json(list)
-    })
-    .catch((err) => {
-      console.log("promise rejected", err);
-    });
+export async function serveJson(req, res) {
+  try {
+    const list = await db.displayAll();
+    res.json(list);
+  } catch (err) {
+    console.error("promise rejected", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+// Optional: aggregate export for convenience
+export default {
+  landing_page,
+  web_development,
+  low_performance,
+  fail_programming,
+  fail_se,
+  fail_webdev,
+  fail_aadp,
+  pass_programming,
+  pass_se,
+  pass_webdev,
+  pass_aadp,
+  application_arch,
+  serveJson,
 };
