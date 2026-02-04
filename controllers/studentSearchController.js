@@ -1,20 +1,12 @@
 // controllers/studentController.js (ES Modules)
 
-// import StudentDatabase from "../models/studentModel.js"; // Works if CJS exports a class via module.exports
-// If studentModel.js has named export: import { StudentDatabase } from '../models/studentModel.js';
-
 import StudentDatabase from "../models/studentModel.js";
 const db = new StudentDatabase("database/student.db");
 
-// db.init(); // Uncomment if you need to init the DB on controller load
+// ---------------- Helper: restructure data ----------------
 
-/**
- * Restructures the list into flat entries for a given subject.
- * Keeps the original behavior: if subject not found for a student,
- * the object will have { student } only (no subject/grade).
- */
-function restructureData(subject, list) {
-  return list.map((item) => {
+const restructureData = (subject, list) =>
+  list.map((item) => {
     const newEntry = { student: item.student };
     const match = Array.isArray(item.modules)
       ? item.modules.find((m) => m?.name === subject)
@@ -27,11 +19,10 @@ function restructureData(subject, list) {
 
     return newEntry;
   });
-}
 
-// ---------- Route handlers (Express-compatible) ----------
+// ---------------- Route Handlers ----------------
 
-export async function landing_page(req, res) {
+export const landing_page = async (req, res) => {
   try {
     const list = await db.displayAll();
     res.render("studentex", { entries: list });
@@ -39,9 +30,9 @@ export async function landing_page(req, res) {
     console.error("promise rejected", err);
     res.status(500).send("Internal Server Error");
   }
-}
+};
 
-export async function web_development(req, res) {
+export const web_development = async (req, res) => {
   const subject = "Web Development";
   try {
     const list = await db.displayWebDev();
@@ -50,9 +41,9 @@ export async function web_development(req, res) {
     console.error("promise rejected", err);
     res.status(500).send("Internal Server Error");
   }
-}
+};
 
-export async function low_performance(req, res) {
+export const low_performance = async (req, res) => {
   try {
     const list = await db.displayLowPerformance();
     res.render("performance", {
@@ -63,11 +54,11 @@ export async function low_performance(req, res) {
     console.error("promise rejected", err);
     res.status(500).send("Internal Server Error");
   }
-}
+};
 
-// ------------- Helpers for repeated pass/fail subject views -------------
+// ---------------- Helper for pass/fail views ----------------
 
-async function renderSubjectStatus(req, res, subject, status) {
+const renderSubjectStatus = async (req, res, subject, status) => {
   try {
     const list =
       status === "pass"
@@ -85,47 +76,39 @@ async function renderSubjectStatus(req, res, subject, status) {
     console.error("promise rejected", err);
     res.status(500).send("Internal Server Error");
   }
-}
+};
 
-// ------------------- Fail routes -------------------
+// ---------------- Fail Routes ----------------
 
-export function fail_programming(req, res) {
-  return renderSubjectStatus(req, res, "Programming", "fail");
-}
+export const fail_programming = (req, res) =>
+  renderSubjectStatus(req, res, "Programming", "fail");
 
-export function fail_se(req, res) {
-  return renderSubjectStatus(req, res, "Software Engineering", "fail");
-}
+export const fail_se = (req, res) =>
+  renderSubjectStatus(req, res, "Software Engineering", "fail");
 
-export function fail_webdev(req, res) {
-  return renderSubjectStatus(req, res, "Web Development", "fail");
-}
+export const fail_webdev = (req, res) =>
+  renderSubjectStatus(req, res, "Web Development", "fail");
 
-export function fail_aadp(req, res) {
-  return renderSubjectStatus(req, res, "Application Architectures", "fail");
-}
+export const fail_aadp = (req, res) =>
+  renderSubjectStatus(req, res, "Application Architectures", "fail");
 
-// ------------------- Pass routes -------------------
+// ---------------- Pass Routes ----------------
 
-export function pass_programming(req, res) {
-  return renderSubjectStatus(req, res, "Programming", "pass");
-}
+export const pass_programming = (req, res) =>
+  renderSubjectStatus(req, res, "Programming", "pass");
 
-export function pass_se(req, res) {
-  return renderSubjectStatus(req, res, "Software Engineering", "pass");
-}
+export const pass_se = (req, res) =>
+  renderSubjectStatus(req, res, "Software Engineering", "pass");
 
-export function pass_webdev(req, res) {
-  return renderSubjectStatus(req, res, "Web Development", "pass");
-}
+export const pass_webdev = (req, res) =>
+  renderSubjectStatus(req, res, "Web Development", "pass");
 
-export function pass_aadp(req, res) {
-  return renderSubjectStatus(req, res, "Application Architectures", "pass");
-}
+export const pass_aadp = (req, res) =>
+  renderSubjectStatus(req, res, "Application Architectures", "pass");
 
-// ------------------- Class list pages -------------------
+// ---------------- Class List Page ----------------
 
-export async function application_arch(req, res) {
+export const application_arch = async (req, res) => {
   const subject = "Application Architectures";
   try {
     const list = await db.displayAppArch();
@@ -134,11 +117,11 @@ export async function application_arch(req, res) {
     console.error("promise rejected", err);
     res.status(500).send("Internal Server Error");
   }
-}
+};
 
-// ------------------- JSON endpoint -------------------
+// ---------------- JSON Endpoint ----------------
 
-export async function serveJson(req, res) {
+export const serveJson = async (req, res) => {
   try {
     const list = await db.displayAll();
     res.json(list);
@@ -146,9 +129,10 @@ export async function serveJson(req, res) {
     console.error("promise rejected", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
-}
+};
 
-// Optional: aggregate export for convenience
+// ---------------- Default Aggregate Export ----------------
+
 export default {
   landing_page,
   web_development,

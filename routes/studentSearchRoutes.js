@@ -15,7 +15,7 @@ const publicDir = path.join(__dirname, "../public");
 router.use(express.static(publicDir));
 
 // --- Controller import ---
-// If your controller file exports a default object (like the version I provided earlier):
+// If your controller file exports a default object with methods, use:
 import controller from "../controllers/studentSearchController.js";
 
 // If instead your controller uses named exports, comment the line above and use:

@@ -1,20 +1,29 @@
-// models/studentModel.js (ES Modules)
+// models/studentModel.js (ES Modules, nedb-promises without cursor API)
 
-import nedb from "gray-nedb";
+import Datastore from "nedb-promises";
 
-export default class StudentDB {
+export default class StudentDatabase {
   constructor(dbFilePath) {
     if (dbFilePath) {
-      this.db = new nedb({ filename: dbFilePath, autoload: true });
+      this.db = Datastore.create({ filename: dbFilePath, autoload: true });
       console.log("DB connected to " + dbFilePath);
     } else {
-      this.db = new nedb(); // in-memory DB
+      this.db = Datastore.create({ inMemoryOnly: true });
+      console.log("DB running in memory");
     }
   }
 
-  init() {
-    // Seed documents
-    this.db.insert(
+  /**
+   * Seed the database if it's empty. Safe to call multiple times.
+   */
+  async init() {
+    const count = await this.db.count({});
+    if (count > 0) {
+      console.log(`DB already seeded (${count} docs). Skipping init.`);
+      return;
+    }
+
+    const seedDocs = [
       {
         student: "Ross",
         age: 20,
@@ -25,13 +34,6 @@ export default class StudentDB {
           { name: "Software Engineering", grade: 73 },
         ],
       },
-      function (err, newDoc) {
-        if (err) console.log("error", err);
-        else console.log("document inserted", newDoc);
-      }
-    );
-
-    this.db.insert(
       {
         student: "Ed",
         age: 20,
@@ -42,13 +44,6 @@ export default class StudentDB {
           { name: "Software Engineering", grade: 63 },
         ],
       },
-      function (err, newDoc) {
-        if (err) console.log("error", err);
-        else console.log("document inserted", newDoc);
-      }
-    );
-
-    this.db.insert(
       {
         student: "Ann",
         age: 20,
@@ -59,13 +54,6 @@ export default class StudentDB {
           { name: "Software Engineering", grade: 59 },
         ],
       },
-      function (err, newDoc) {
-        if (err) console.log("error", err);
-        else console.log("document inserted", newDoc);
-      }
-    );
-
-    this.db.insert(
       {
         student: "Ali",
         age: 23,
@@ -76,13 +64,6 @@ export default class StudentDB {
           { name: "Software Engineering", grade: 66 },
         ],
       },
-      function (err, newDoc) {
-        if (err) console.log("error", err);
-        else console.log("document inserted", newDoc);
-      }
-    );
-
-    this.db.insert(
       {
         student: "Fred",
         age: 20,
@@ -93,13 +74,6 @@ export default class StudentDB {
           { name: "Software Engineering", grade: 69 },
         ],
       },
-      function (err, newDoc) {
-        if (err) console.log("error", err);
-        else console.log("document inserted", newDoc);
-      }
-    );
-
-    this.db.insert(
       {
         student: "Colin",
         age: 20,
@@ -110,127 +84,77 @@ export default class StudentDB {
           { name: "Software Engineering", grade: 70 },
         ],
       },
-      function (err, newDoc) {
-        if (err) console.log("error", err);
-        else console.log("document inserted", newDoc);
-      }
+    ];
+
+    await this.db.insert(seedDocs);
+    console.log("Database seeded.");
+  }
+
+  // Utility to sort by student name safely
+  sortByStudent(entries) {
+    return entries.sort((a, b) =>
+      String(a.student || "").localeCompare(String(b.student || ""), "en", {
+        sensitivity: "base",
+      })
     );
   }
 
-  displayAll() {
-    return new Promise((resolve, reject) => {
-      this.db.find({}, function (err, entries) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(entries);
-          console.log("function returns: ", entries);
-        }
-      });
-    });
+  // -------------------- Queries using async/await --------------------
+
+  async displayAll() {
+    const entries = await this.db.find({});
+    const sorted = this.sortByStudent(entries);
+    console.log("displayAll returns:", sorted);
+    return sorted;
   }
 
-  displayWebDev() {
-    return new Promise((resolve, reject) => {
-      this.db
-        .find({ "modules.name": "Web Development" })
-        .sort({ student: 1 })
-        .exec(function (err, entries) {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(entries);
-            console.log("function returns: ", entries);
-          }
-        });
-    });
+  async displayWebDev() {
+    const entries = await this.db.find({ "modules.name": "Web Development" });
+    const sorted = this.sortByStudent(entries);
+    console.log("displayWebDev returns:", sorted);
+    return sorted;
   }
 
-  displayAppArch() {
-    return new Promise((resolve, reject) => {
-      this.db.find(
-        { "modules.name": "Application Architectures" },
-        function (err, entries) {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(entries);
-            console.log("function returns: ", entries);
-          }
-        }
-      );
+  async displayAppArch() {
+    const entries = await this.db.find({
+      "modules.name": "Application Architectures",
     });
+    const sorted = this.sortByStudent(entries);
+    console.log("displayAppArch returns:", sorted);
+    return sorted;
   }
 
-  displayLowPerformance() {
-    return new Promise((resolve, reject) => {
-      this.db.find({ "modules.grade": { $lt: 50 } }, function (err, entries) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(entries);
-          console.log("function lowPerformance returns: ", entries);
-        }
-      });
-    });
+  async displayLowPerformance() {
+    const entries = await this.db.find({ "modules.grade": { $lt: 50 } });
+    const sorted = this.sortByStudent(entries);
+    console.log("displayLowPerformance returns:", sorted);
+    return sorted;
   }
 
-  displayFail(subject) {
-    return new Promise((resolve, reject) => {
-      console.log(subject);
-      this.db
-        .find({
-          modules: { $elemMatch: { name: subject, grade: { $lt: 40 } } },
-        })
-        .sort({ student: 1 })
-        .exec(function (err, entries) {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(entries);
-            console.log("function returns: ", entries);
-          }
-        });
+  async displayFail(subject) {
+    const entries = await this.db.find({
+      modules: { $elemMatch: { name: subject, grade: { $lt: 40 } } },
     });
+    const sorted = this.sortByStudent(entries);
+    console.log("displayFail returns:", sorted);
+    return sorted;
   }
 
-  displayPass(subject) {
-    return new Promise((resolve, reject) => {
-      console.log(subject);
-      this.db
-        .find({
-          modules: { $elemMatch: { name: subject, grade: { $gte: 40 } } },
-        })
-        .sort({ student: 1 })
-        .exec(function (err, entries) {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(entries);
-            console.log("function returns: ", entries);
-          }
-        });
+  async displayPass(subject) {
+    const entries = await this.db.find({
+      modules: { $elemMatch: { name: subject, grade: { $gte: 40 } } },
     });
+    const sorted = this.sortByStudent(entries);
+    console.log("displayPass returns:", sorted);
+    return sorted;
   }
 
-  // --- Examples for update/push/remove (kept as comments) ---
-  // update({ student: 'Ross' }, { $set: { age: 24 } }, {}, function (err, numUp) {
-  //   if (err) console.log('error updating documents', err);
-  //   else console.log(numUp, 'document updated. Ross age updated');
-  // });
-
-  // update(
+  // -------------------- Examples: update / push / remove --------------------
+  // await this.db.update({ student: 'Ross' }, { $set: { age: 24 } }, { multi: false });
+  // await this.db.update(
   //   { student: 'Fred' },
   //   { $push: { modules: { name: 'Web Development', grade: 67 } } },
-  //   {},
-  //   function (err, newMark) {
-  //     if (err) console.log('error updating documents', err);
-  //     else console.log(newMark, 'document updated. New mark recorded for Fred for Web Development');
-  //   }
+  //   { multi: false }
   // );
-
-  // remove({ student: 'Ed' }, {}, function (err, docsRem) {
-  //   if (err) console.log('error deleting document Ed');
-  //   else console.log(docsRem, ' update. Document Ed removed from database');
-  // });
+  // await this.db.remove({ student: 'Ed' }, { multi: false });
 }
