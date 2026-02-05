@@ -25,6 +25,8 @@ import controller from "../controllers/studentSearchController.js";
 router.get("/", controller.landing_page);
 router.get("/webdev", controller.web_development);
 router.get("/aadp", controller.application_arch);
+router.get("/se", controller.soft_engineering);
+router.get("/programming", controller.prog);
 router.get("/lowperformance", controller.low_performance);
 
 router.get("/failedprogramming", controller.fail_programming);

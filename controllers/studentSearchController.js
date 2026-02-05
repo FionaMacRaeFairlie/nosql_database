@@ -119,6 +119,27 @@ export const application_arch = async (req, res) => {
   }
 };
 
+export const soft_engineering = async (req, res) => {
+  const subject = "Software Engineering";
+  try {
+    const list = await db.displaySoftEng();
+    res.render("classList", { title: subject, entries: list });
+  } catch (err) {
+    console.error("promise rejected", err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const prog = async (req, res) => {
+  const subject = "Programming";
+  try {
+    const list = await db.displayProg();
+    res.render("classList", { title: subject, entries: list });
+  } catch (err) {
+    console.error("promise rejected", err);
+    res.status(500).send("Internal Server Error");
+  }
+};
 // ---------------- JSON Endpoint ----------------
 
 export const serveJson = async (req, res) => {
@@ -146,5 +167,7 @@ export default {
   pass_webdev,
   pass_aadp,
   application_arch,
+  soft_engineering,
+  prog,
   serveJson,
 };

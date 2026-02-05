@@ -4,13 +4,61 @@
    <meta charset="utf-8"> 
     <meta name="viewport" content="width=device-width, initial-scale=1"> 
     <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <script src="../js/bootstrap.bundle.min.js"></script>
+
+
 </head>
 
 <body>
-    {{#entries}}
-    <div class="card w-50">
-        <div class="card-body">
-            <h3 class="card-title">{{student}}</h3>
+ 
+ {{>navSide}}   
+
+  <div class="col-9 p-4">
+          <!-- <h2>Content Panel</h2>
+          <p>This panel displays to the right of the menu.</p>
+        </div>
+
+      </div>
+    </div>
+
+
+      <main class="col-9 px-4 py-4"> -->
+        <div class="accordion" id="accordionExample">
+          {{#entries}}   
+                <div class="accordion-item">
+                    <div class="accordion-header"id={{_id}}>
+                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#`{{student}}`" aria-expanded="false" aria-controls="collapseTwo">
+                             {{student}}
+                        </button>
+                   
+                       <div id=`{{student}}` class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                <p><strong>Name :</strong> &nbsp;{{student}} </p>
+                                <p><strong>Age:</strong>&nbsp; {{age}}</p>
+                                <p><strong>Programme of study:</strong>&nbsp; {{programme}}</p>
+                                <p><strong>Results:</strong></p>
+                                {{#modules}}
+                                <table class="table">
+                                <tr><td class="col-2">{{name}}</td><td class="col-1">{{grade}}</td></tr>
+                                </table>
+                                {{/modules}}
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div> 
+            {{/entries}}
+        </div>
+     
+ <!-- </div>
+</nav> -->
+    <!-- <div class="card w-50 mb-3">
+           {{#entries}}
+          <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+            <h4>{{student}}</h4>
+            </div>
+            <div class="card-body"></div>
              <p>age:&nbsp; {{age}}</p>
              <p>{{programme}}</p>
              {{#modules}}
@@ -19,12 +67,16 @@
              </table>
              {{/modules}}
         </div>
+    
+         {{/entries}}
+         </div> 
     </div>
-     {{/entries}}
-    </div> 
+
+    
     {{^entries}}
         No entries yet.
-    {{/entries}}
+    {{/entries}} -->
+
 </body>
 
 </html>

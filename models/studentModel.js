@@ -123,6 +123,20 @@ export default class StudentDatabase {
     console.log("displayAppArch returns:", sorted);
     return sorted;
   }
+  async displaySoftEng() {
+    const entries = await this.db.find({
+      "modules.name": "Software Engineering",
+    });
+    const sorted = this.sortByStudent(entries);
+    console.log("displaySoftEng returns:", sorted);
+    return sorted;
+  }
+  async displayProg() {
+    const entries = await this.db.find({ "modules.name": "Programming" });
+    const sorted = this.sortByStudent(entries);
+    console.log("displayProg returns:", sorted);
+    return sorted;
+  }
 
   async displayLowPerformance() {
     const entries = await this.db.find({ "modules.grade": { $lt: 50 } });
