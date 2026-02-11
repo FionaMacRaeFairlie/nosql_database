@@ -4,13 +4,14 @@ import { fileURLToPath } from "node:url";
 import mustacheExpress from "mustache-express";
 import bodyParser from "body-parser";
 import router from "./routes/studentSearchRoutes.js";
+import cors from "cors";
 
 // Recreate __dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-
+app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(
